@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./rsc"
+	"./handler"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -15,7 +15,7 @@ func main() {
 func NewHttpHandler() http.Handler {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", rootHandler()).Methods("GET")
+	router.HandleFunc("/clinics", handler.GetClinics()).Methods("GET")
 
 	return router
 }
