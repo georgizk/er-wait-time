@@ -65,6 +65,9 @@ func GetEstimedWaitTime() http.HandlerFunc {
 
 func calculateAvgWaitTime(clinic rsc.Clinic) float64 {
 	visitTimes := clinicVisitTimes[clinic]
+	if visitTimes == nil || len(visitTimes) == 0 {
+		return 0
+	}
 
 	var averageVisitTime float64
 	for _, visitTime := range visitTimes {
