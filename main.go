@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./rsc"
 	"github.com/gorilla/mux"
 	"net/http"
 )
