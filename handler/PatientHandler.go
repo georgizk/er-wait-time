@@ -3,6 +3,7 @@ package handler
 import (
 	"er-wait-time/rsc"
 	"net/http"
+	"time"
 )
 
 var clinicPatients map[int][]rsc.Patient = make(map[int][]rsc.Patient)
@@ -22,6 +23,21 @@ func GetPatients() http.HandlerFunc {
 		instantiatePatients(clinicId)
 		patients := clinicPatients[clinicId]
 		returnPatients(w, r, patients)
+	}
+}
+
+func AddPatient() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clinicId := GetIntParam(r, "clinicId")
+		instantiatePatients(clinicId)
+		patients := clinicPatients[clinicId]
+		newNumber := len(patients) + 1
+		if newNumber > 1 {
+			newNumber = patients[newNumber-2].PatientNumber + 1
+		}
+		patient := rsc.Patient{PatientNumber: newNumber, CheckInTime: time.Now()}
+		clinicPatients[clinicId] = append(patients, patient)
+		returnPatients(w, r, []rsc.Patient{patient})
 	}
 }
 

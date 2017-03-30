@@ -19,6 +19,7 @@ func NewHttpHandler() http.Handler {
 	router.HandleFunc("/clinics/add", handler.AddClinic()).Methods("POST")
 
 	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients", handler.GetPatients()).Methods("GET")
+	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients/add", handler.AddPatient()).Methods("POST")
 
 	return router
 }
