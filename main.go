@@ -16,6 +16,7 @@ func NewHttpHandler() http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/clinics", handler.GetClinics()).Methods("GET")
+	router.HandleFunc("/clinics/add", handler.AddClinic()).Methods("POST")
 
 	return router
 }
