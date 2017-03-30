@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var clinicPatients map[int][]rsc.Patient = make(map[int][]rsc.Patient)
+var clinicPatients map[rsc.Clinic][]rsc.Patient = make(map[rsc.Clinic][]rsc.Patient)
 var patientMutex sync.Mutex
 var clinicVisitTimes map[rsc.Clinic][]float64 = make(map[rsc.Clinic][]float64)
 var clinicVisitMutex sync.Mutex
@@ -25,10 +25,17 @@ func NewPatientsResponse(a ApiResponse, r []rsc.Patient) PatientsResponse {
 func GetPatients() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicId := GetIntParam(r, "clinicId")
+		err, clinic := GetClinic(clinicId)
+		if err != nil {
+			str := err.Error()
+			rsp := NewApiResponse(500, &str)
+			EncodeHelper(w, rsp)
+			return
+		}
 		patientMutex.Lock()
 		defer patientMutex.Unlock()
-		instantiatePatients(clinicId)
-		patients := clinicPatients[clinicId]
+		instantiatePatients(clinic)
+		patients := clinicPatients[clinic]
 		returnPatients(w, r, patients)
 	}
 }
@@ -36,16 +43,23 @@ func GetPatients() http.HandlerFunc {
 func AddPatient() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicId := GetIntParam(r, "clinicId")
+		err, clinic := GetClinic(clinicId)
+		if err != nil {
+			str := err.Error()
+			rsp := NewApiResponse(500, &str)
+			EncodeHelper(w, rsp)
+			return
+		}
 		patientMutex.Lock()
 		defer patientMutex.Unlock()
-		instantiatePatients(clinicId)
-		patients := clinicPatients[clinicId]
+		instantiatePatients(clinic)
+		patients := clinicPatients[clinic]
 		newNumber := len(patients) + 1
 		if newNumber > 1 {
 			newNumber = patients[newNumber-2].PatientNumber + 1
 		}
 		patient := rsc.Patient{PatientNumber: newNumber, CheckInTime: time.Now()}
-		clinicPatients[clinicId] = append(patients, patient)
+		clinicPatients[clinic] = append(patients, patient)
 		returnPatients(w, r, []rsc.Patient{patient})
 	}
 }
@@ -53,23 +67,27 @@ func AddPatient() http.HandlerFunc {
 func RemovePatient() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicId := GetIntParam(r, "clinicId")
+		err, clinic := GetClinic(clinicId)
+		if err != nil {
+			str := err.Error()
+			rsp := NewApiResponse(500, &str)
+			EncodeHelper(w, rsp)
+			return
+		}
 		patientNumber := GetIntParam(r, "patientNumber")
 		patientMutex.Lock()
 		defer patientMutex.Unlock()
-		instantiatePatients(clinicId)
-		patients := clinicPatients[clinicId]
+		instantiatePatients(clinic)
+		patients := clinicPatients[clinic]
 		err, patients, removedPatient := removePatient(patients, patientNumber)
 		if err == nil {
-			clinicMutex.Lock()
 			clinicVisitMutex.Lock()
-			defer clinicMutex.Unlock()
 			defer clinicVisitMutex.Unlock()
-			clinic := allClinics[clinicId]
-			clinicPatients[clinicId] = patients
+			clinicPatients[clinic] = patients
 			currentVisitTime := time.Since(removedPatient.CheckInTime)
 			clinicVisitTimes[clinic] = append(clinicVisitTimes[clinic], currentVisitTime.Seconds())
 		}
-		returnPatients(w, r, clinicPatients[clinicId])
+		returnPatients(w, r, clinicPatients[clinic])
 	}
 }
 
@@ -78,9 +96,9 @@ func returnPatients(w http.ResponseWriter, r *http.Request, cPatients []rsc.Pati
 	EncodeHelper(w, patients)
 }
 
-func instantiatePatients(clinicId int) {
-	if clinicPatients[clinicId] == nil {
-		clinicPatients[clinicId] = []rsc.Patient{}
+func instantiatePatients(clinic rsc.Clinic) {
+	if clinicPatients[clinic] == nil {
+		clinicPatients[clinic] = []rsc.Patient{}
 	}
 }
 

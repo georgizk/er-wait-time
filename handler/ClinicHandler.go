@@ -2,6 +2,7 @@ package handler
 
 import (
 	"er-wait-time/rsc"
+	"errors"
 	"net/http"
 	"sync"
 )
@@ -16,6 +17,16 @@ type ClinicsResponse struct {
 
 func NewClinicsResponse(a ApiResponse, r []rsc.Clinic) ClinicsResponse {
 	return ClinicsResponse{ApiResponse: a, Result: r}
+}
+
+func GetClinic(clinicId int) (error, rsc.Clinic) {
+	clinicMutex.Lock()
+	defer clinicMutex.Unlock()
+	if clinicId < len(allClinics) && clinicId >= 0 {
+		return nil, allClinics[clinicId]
+	}
+
+	return errors.New("Index out of bounds"), rsc.Clinic{}
 }
 
 func GetClinics() http.HandlerFunc {
