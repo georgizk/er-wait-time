@@ -45,7 +45,7 @@ func DecodeHelper(r *http.Request, s interface{}) error {
 
 func EncodeHelper(w http.ResponseWriter, s ApiResponseIf) {
 	encoder := json.NewEncoder(w)
-	w.WriteHeader(s.getCode())
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(s.getCode())
 	encoder.Encode(s)
 }
