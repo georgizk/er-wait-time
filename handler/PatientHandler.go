@@ -5,10 +5,12 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 )
 
 var clinicPatients map[int][]rsc.Patient = make(map[int][]rsc.Patient)
+var patientMutex sync.Mutex
 
 type PatientsResponse struct {
 	ApiResponse
@@ -22,6 +24,8 @@ func NewPatientsResponse(a ApiResponse, r []rsc.Patient) PatientsResponse {
 func GetPatients() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicId := GetIntParam(r, "clinicId")
+		patientMutex.Lock()
+		defer patientMutex.Unlock()
 		instantiatePatients(clinicId)
 		patients := clinicPatients[clinicId]
 		returnPatients(w, r, patients)
@@ -31,6 +35,8 @@ func GetPatients() http.HandlerFunc {
 func AddPatient() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicId := GetIntParam(r, "clinicId")
+		patientMutex.Lock()
+		defer patientMutex.Unlock()
 		instantiatePatients(clinicId)
 		patients := clinicPatients[clinicId]
 		newNumber := len(patients) + 1
@@ -47,6 +53,8 @@ func RemovePatient() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicId := GetIntParam(r, "clinicId")
 		patientNumber := GetIntParam(r, "patientNumber")
+		patientMutex.Lock()
+		defer patientMutex.Unlock()
 		instantiatePatients(clinicId)
 		patients := clinicPatients[clinicId]
 		err, patients, removedPatient := removePatient(patients, patientNumber)

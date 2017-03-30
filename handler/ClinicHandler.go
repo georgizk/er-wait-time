@@ -3,9 +3,11 @@ package handler
 import (
 	"er-wait-time/rsc"
 	"net/http"
+	"sync"
 )
 
 var allClinics []rsc.Clinic = []rsc.Clinic{}
+var clinicMutex sync.Mutex
 
 type ClinicsResponse struct {
 	ApiResponse
@@ -18,6 +20,8 @@ func NewClinicsResponse(a ApiResponse, r []rsc.Clinic) ClinicsResponse {
 
 func GetClinics() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		clinicMutex.Lock()
+		defer clinicMutex.Unlock()
 		returnClinics(w, r)
 	}
 }
@@ -29,6 +33,8 @@ func returnClinics(w http.ResponseWriter, r *http.Request) {
 
 func AddClinic() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		clinicMutex.Lock()
+		defer clinicMutex.Unlock()
 		clinic := rsc.Clinic{}
 		err := DecodeHelper(r, &clinic)
 		if err != nil {
