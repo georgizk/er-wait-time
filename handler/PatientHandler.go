@@ -3,7 +3,6 @@ package handler
 import (
 	"er-wait-time/rsc"
 	"errors"
-	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -11,6 +10,8 @@ import (
 
 var clinicPatients map[int][]rsc.Patient = make(map[int][]rsc.Patient)
 var patientMutex sync.Mutex
+var clinicVisitTimes map[rsc.Clinic][]float64 = make(map[rsc.Clinic][]float64)
+var clinicVisitMutex sync.Mutex
 
 type PatientsResponse struct {
 	ApiResponse
@@ -59,9 +60,14 @@ func RemovePatient() http.HandlerFunc {
 		patients := clinicPatients[clinicId]
 		err, patients, removedPatient := removePatient(patients, patientNumber)
 		if err == nil {
+			clinicMutex.Lock()
+			clinicVisitMutex.Lock()
+			defer clinicMutex.Unlock()
+			defer clinicVisitMutex.Unlock()
+			clinic := allClinics[clinicId]
 			clinicPatients[clinicId] = patients
-			timeDelta := time.Since(removedPatient.CheckInTime)
-			log.Println("patient removed after " + timeDelta.String())
+			currentVisitTime := time.Since(removedPatient.CheckInTime)
+			clinicVisitTimes[clinic] = append(clinicVisitTimes[clinic], currentVisitTime.Seconds())
 		}
 		returnPatients(w, r, clinicPatients[clinicId])
 	}

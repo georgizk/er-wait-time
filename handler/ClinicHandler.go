@@ -26,6 +26,18 @@ func GetClinics() http.HandlerFunc {
 	}
 }
 
+func calculateAvgVisitTime(clinic rsc.Clinic) float64 {
+	visitTimes := clinicVisitTimes[clinic]
+
+	var averageVisitTime float64
+	for _, visitTime := range visitTimes {
+		averageVisitTime += visitTime
+	}
+	averageVisitTime /= float64(len(visitTimes))
+
+	return averageVisitTime
+}
+
 func returnClinics(w http.ResponseWriter, r *http.Request) {
 	clinics := NewClinicsResponse(NewApiResponse(200, nil), allClinics)
 	EncodeHelper(w, clinics)
