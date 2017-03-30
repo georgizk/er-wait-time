@@ -30,13 +30,20 @@ func NewWaitTimeResponse(a ApiResponse, r rsc.Clinic, z float64) WaitTimeRespons
 }
 
 func GetClinic(clinicId int) (error, rsc.Clinic) {
-	clinicMutex.Lock()
-	defer clinicMutex.Unlock()
 	if clinicId < len(allClinics) && clinicId >= 0 {
 		return nil, allClinics[clinicId]
 	}
 
 	return errors.New("Index out of bounds"), rsc.Clinic{}
+}
+
+func SaveClinic(clinicId int, clinic rsc.Clinic) error {
+	if clinicId < len(allClinics) && clinicId >= 0 {
+		allClinics[clinicId] = clinic
+		return nil
+	}
+
+	return errors.New("Index out of bounds")
 }
 
 func GetClinics() http.HandlerFunc {
@@ -49,6 +56,8 @@ func GetClinics() http.HandlerFunc {
 
 func GetEstimedWaitTime() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		clinicMutex.Lock()
+		defer clinicMutex.Unlock()
 		clinicId := GetIntParam(r, "clinicId")
 		err, clinic := GetClinic(clinicId)
 		if err != nil {
@@ -57,25 +66,10 @@ func GetEstimedWaitTime() http.HandlerFunc {
 			EncodeHelper(w, rsp)
 			return
 		}
-		waitTime := calculateAvgWaitTime(clinic)
+		waitTime := clinic.CalculateAvgWaitTime()
 		response := NewWaitTimeResponse(NewApiResponse(200, nil), clinic, waitTime)
 		EncodeHelper(w, response)
 	}
-}
-
-func calculateAvgWaitTime(clinic rsc.Clinic) float64 {
-	visitTimes := clinicVisitTimes[clinic]
-	if visitTimes == nil || len(visitTimes) == 0 {
-		return 0
-	}
-
-	var averageVisitTime float64
-	for _, visitTime := range visitTimes {
-		averageVisitTime += visitTime
-	}
-	averageVisitTime /= float64(len(visitTimes))
-
-	return averageVisitTime
 }
 
 func returnClinics(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +81,7 @@ func AddClinic() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicMutex.Lock()
 		defer clinicMutex.Unlock()
-		clinic := rsc.Clinic{}
+		clinic := rsc.Clinic{NextPatientNumber: 1, QueuedPatients: []rsc.Patient{}, VisitTimes: []rsc.VisitTime{}}
 		err := DecodeHelper(r, &clinic)
 		if err != nil {
 			str := err.Error()
@@ -95,6 +89,7 @@ func AddClinic() http.HandlerFunc {
 			clinics := NewClinicsResponse(errRsp, allClinics)
 			EncodeHelper(w, clinics)
 		} else {
+
 			allClinics = append(allClinics, clinic)
 			returnClinics(w, r)
 		}

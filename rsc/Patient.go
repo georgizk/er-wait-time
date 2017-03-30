@@ -5,7 +5,7 @@ import (
 )
 
 type Patient struct {
-	PatientNumber int
+	PatientNumber uint64
 	CheckInTime   time.Time
 	Priority      int
 }
