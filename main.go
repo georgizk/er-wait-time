@@ -5,6 +5,7 @@ import (
 	"er-wait-time/rsc"
 	"github.com/gorilla/mux"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -26,20 +27,18 @@ func NewHttpHandler() http.Handler {
 	return router
 }
 
-// To be kept in memory
-var clinicVisitTimes map[rsc.Clinic][]time.Time
+var clinicVisitTimes map[rsc.Clinic][]float64 = make(map[rsc.Clinic][]float64)
 
-// To be executed every time that a 'sign out' happens
-func calculateAvgVisitTime(clinic rsc.Clinic, patient rsc.Patient) float32 {
+func calculateAvgVisitTime(clinic rsc.Clinic, patient rsc.Patient) float64 {
 	visitTimes := clinicVisitTimes[clinic]
-	currentVisitTime := patient.CheckoutTime - time.Now()
+	currentVisitTime := time.Since(patient.CheckInTime)
 
-	averageVisitTime := 0.0
-	for visitTime := range visitTimes {
+	var averageVisitTime float64
+	for _, visitTime := range visitTimes {
 		averageVisitTime += visitTime
 	}
-	averageVisitTime += currentVisitTime
-	averageVisitTime /= len(visitTimes + 1)
+	averageVisitTime += currentVisitTime.Seconds()
+	averageVisitTime /= float64(len(visitTimes) + 1)
 	return averageVisitTime
 }
 
