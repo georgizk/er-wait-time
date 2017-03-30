@@ -2,6 +2,8 @@ package handler
 
 import (
 	"er-wait-time/rsc"
+	"errors"
+	"log"
 	"net/http"
 	"time"
 )
@@ -41,6 +43,22 @@ func AddPatient() http.HandlerFunc {
 	}
 }
 
+func RemovePatient() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clinicId := GetIntParam(r, "clinicId")
+		patientNumber := GetIntParam(r, "patientNumber")
+		instantiatePatients(clinicId)
+		patients := clinicPatients[clinicId]
+		err, patients, removedPatient := removePatient(patients, patientNumber)
+		if err == nil {
+			clinicPatients[clinicId] = patients
+			timeDelta := time.Since(removedPatient.CheckInTime)
+			log.Println("patient removed after " + timeDelta.String())
+		}
+		returnPatients(w, r, clinicPatients[clinicId])
+	}
+}
+
 func returnPatients(w http.ResponseWriter, r *http.Request, cPatients []rsc.Patient) {
 	patients := NewPatientsResponse(NewApiResponse(200, nil), cPatients)
 	EncodeHelper(w, patients)
@@ -50,4 +68,21 @@ func instantiatePatients(clinicId int) {
 	if clinicPatients[clinicId] == nil {
 		clinicPatients[clinicId] = []rsc.Patient{}
 	}
+}
+
+func removePatient(s []rsc.Patient, patientNumber int) (error, []rsc.Patient, rsc.Patient) {
+	for i := 0; i < len(s); i++ {
+		patient := s[i]
+		if patient.PatientNumber == patientNumber {
+
+			// put removed element at the end of the array, then return
+			// array that is one element shorter
+			if len(s) > 1 {
+				s[len(s)-1], s[i] = s[i], s[len(s)-1]
+			}
+			return nil, s[:len(s)-1], patient
+		}
+	}
+
+	return errors.New("patient not found"), s, rsc.Patient{}
 }

@@ -16,10 +16,11 @@ func NewHttpHandler() http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/clinics", handler.GetClinics()).Methods("GET")
-	router.HandleFunc("/clinics/add", handler.AddClinic()).Methods("POST")
+	router.HandleFunc("/clinics", handler.AddClinic()).Methods("POST")
 
 	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients", handler.GetPatients()).Methods("GET")
-	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients/add", handler.AddPatient()).Methods("POST")
+	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients", handler.AddPatient()).Methods("POST")
+	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients/{patientNumber:[0-9]+}", handler.RemovePatient()).Methods("DELETE")
 
 	return router
 }
