@@ -29,16 +29,17 @@ func returnClinics(w http.ResponseWriter, r *http.Request) {
 
 func AddClinic() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var clinic rsc.Clinic
+		clinic := rsc.Clinic{}
 		err := DecodeHelper(r, &clinic)
 		if err != nil {
-			allClinics = append(allClinics, clinic)
-			returnClinics(w, r)
-		} else {
 			str := err.Error()
 			errRsp := NewApiResponse(500, &str)
 			clinics := NewClinicsResponse(errRsp, allClinics)
 			EncodeHelper(w, clinics)
+		} else {
+			allClinics = append(allClinics, clinic)
+			returnClinics(w, r)
+
 		}
 	}
 }
