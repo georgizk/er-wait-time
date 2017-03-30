@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"../rsc"
+	"er-wait-time/rsc"
 	"net/http"
 )
 

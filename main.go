@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./handler"
+	"er-wait-time/handler"
 	"github.com/gorilla/mux"
 	"net/http"
 )

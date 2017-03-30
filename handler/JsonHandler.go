@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 )
@@ -48,4 +50,14 @@ func EncodeHelper(w http.ResponseWriter, s ApiResponseIf) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(s.getCode())
 	encoder.Encode(s)
+}
+
+func GetIntParam(r *http.Request, paramName string) int {
+	vars := mux.Vars(r)
+	var param int
+	numFound, err := fmt.Sscanf(vars[paramName], "%d", &param)
+	if numFound != 1 || err != nil {
+		return -1
+	}
+	return param
 }

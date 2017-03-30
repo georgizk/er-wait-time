@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"../rsc"
-	"fmt"
-	"github.com/gorilla/mux"
+	"er-wait-time/rsc"
 	"net/http"
 )
 
@@ -20,7 +18,7 @@ func NewPatientsResponse(a ApiResponse, r []rsc.Patient) PatientsResponse {
 
 func GetPatients() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		clinicId := getClinicId(r)
+		clinicId := GetIntParam(r, "clinicId")
 		instantiatePatients(clinicId)
 		patients := clinicPatients[clinicId]
 		returnPatients(w, r, patients)
@@ -36,14 +34,4 @@ func instantiatePatients(clinicId int) {
 	if clinicPatients[clinicId] == nil {
 		clinicPatients[clinicId] = []rsc.Patient{}
 	}
-}
-
-func getClinicId(r *http.Request) int {
-	vars := mux.Vars(r)
-	var clinicId int
-	numFound, err := fmt.Sscanf(vars["clinicId"], "%d", &clinicId)
-	if numFound != 1 || err != nil {
-		return -1
-	}
-	return clinicId
 }
