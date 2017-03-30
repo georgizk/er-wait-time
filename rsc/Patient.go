@@ -6,6 +6,6 @@ import (
 
 type Patient struct {
 	PatientNumber int
-	CheckInTime time.Time
-	CheckOutTime time.Time
+	CheckInTime   time.Time
+	CheckOutTime  time.Time
 }

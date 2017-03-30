@@ -1,10 +1,8 @@
 package rsc
 
-import (
-
-)
+import ()
 
 type Clinic struct {
 	Address string
-	Name string
+	Name    string
 }

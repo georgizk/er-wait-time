@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+var allClinics []rsc.Clinic = []rsc.Clinic{}
+
 type ClinicsResponse struct {
 	ApiResponse
 	Result []rsc.Clinic `json:"result"`
@@ -13,8 +15,6 @@ type ClinicsResponse struct {
 func NewClinicsResponse(a ApiResponse, r []rsc.Clinic) ClinicsResponse {
 	return ClinicsResponse{ApiResponse: a, Result: r}
 }
-
-var allClinics []rsc.Clinic = []rsc.Clinic{}
 
 func GetClinics() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
