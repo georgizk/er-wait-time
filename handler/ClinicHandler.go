@@ -15,8 +15,18 @@ type ClinicsResponse struct {
 	Result []rsc.Clinic `json:"result"`
 }
 
+type WaitTimeResponse struct {
+	ApiResponse
+	Clinic   rsc.Clinic `json:"clinic"`
+	WaitTime float64    `json:"waitTime"`
+}
+
 func NewClinicsResponse(a ApiResponse, r []rsc.Clinic) ClinicsResponse {
 	return ClinicsResponse{ApiResponse: a, Result: r}
+}
+
+func NewWaitTimeResponse(a ApiResponse, r rsc.Clinic, z float64) WaitTimeResponse {
+	return WaitTimeResponse{ApiResponse: a, Clinic: r, WaitTime: z}
 }
 
 func GetClinic(clinicId int) (error, rsc.Clinic) {
@@ -37,7 +47,23 @@ func GetClinics() http.HandlerFunc {
 	}
 }
 
-func calculateAvgVisitTime(clinic rsc.Clinic) float64 {
+func GetEstimedWaitTime() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clinicId := GetIntParam(r, "clinicId")
+		err, clinic := GetClinic(clinicId)
+		if err != nil {
+			str := err.Error()
+			rsp := NewApiResponse(500, &str)
+			EncodeHelper(w, rsp)
+			return
+		}
+		waitTime := calculateAvgWaitTime(clinic)
+		response := NewWaitTimeResponse(NewApiResponse(200, nil), clinic, waitTime)
+		EncodeHelper(w, response)
+	}
+}
+
+func calculateAvgWaitTime(clinic rsc.Clinic) float64 {
 	visitTimes := clinicVisitTimes[clinic]
 
 	var averageVisitTime float64
@@ -68,7 +94,6 @@ func AddClinic() http.HandlerFunc {
 		} else {
 			allClinics = append(allClinics, clinic)
 			returnClinics(w, r)
-
 		}
 	}
 }
