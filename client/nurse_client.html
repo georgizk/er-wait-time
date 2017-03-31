@@ -14,7 +14,13 @@
     <div data-role="header"><h1>Clinics</h1></div>
     <div role="main" class="ui-content">
       <ul data-role="listview" data-filter="true" id="clinics_list">
-      </ul>    
+      </ul>
+      <br>
+      <form id="AddClinic">
+        <label>Clinic Name <input name="Name"></label>
+        <label>Clinic Address <input name="Address"></label>
+        <input type="submit" value="Add Clinic">
+      </form>      
     </div>
     <div data-role="footer"></div>
   </div>
@@ -38,9 +44,23 @@
   </style>
   
   <script>
+  
     var config = apiClient.Config("http://127.0.0.1:8080")
     $(document).ready(function() {
       apiClient.getClinics(config, populateClinics)
+      
+      
+      $('#AddClinic').submit(function(e) {
+        e.preventDefault()
+        data = $(this).serializeArray()
+        mappedData = {}
+        for (var field of data) {
+          mappedData[field.name] = field.value
+        }
+        apiClient.addClinic(config, mappedData, function(data) {
+          apiClient.getClinics(config, populateClinics)
+        })
+      })
     })  
     
     function populateClinics(data) {
@@ -128,7 +148,8 @@
       })
       
       $('div#patients_footer').html('').append(addbtn)
-    }
+    }  
+    
   </script>
 </body>
 </html>
