@@ -1,6 +1,6 @@
 var apiClient = (function() {
   return {
-    Config: function(apiAddr, authToken)
+    Config: function(apiAddr)
     {
       return {
         apiAddr: apiAddr,

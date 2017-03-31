@@ -2,14 +2,23 @@ package main
 
 import (
 	"er-wait-time/handler"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"net/http"
+	"os"
 )
 
 func main() {
 	address := "0.0.0.0:8080"
 	handler := NewHttpHandler()
-	http.ListenAndServe(address, handler)
+
+	corsHandler := handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowedMethods([]string{"GET", "POST", "DELETE"}))(handler)
+
+	loggingHandler := handlers.LoggingHandler(os.Stdout, corsHandler)
+
+	http.ListenAndServe(address, loggingHandler)
 }
 
 func NewHttpHandler() http.Handler {
