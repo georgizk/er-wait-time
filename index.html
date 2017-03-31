@@ -1,0 +1,67 @@
+<html>
+	<head>
+		<script type="text/javascript" src="client/jquery-1.11.1.min.js"></script>
+		<script type="text/javascript" src="client/jquery.mobile-1.4.5.min.js"></script>
+		<script type="text/javascript" src="client/client.js"></script>
+		<link rel="stylesheet" href="client/jquery.mobile-1.4.5.min.css">
+	</head>
+	<body>
+		<div id="userInput">	
+			<div>
+				<label for="clinicAddPatient">Clinic Name:</label>
+				<input type="text" name="clinicAddPatient" id="clinicAddPatient" value=""/>
+				<a href="#" class="ui-btn ui-btn-inline ui-mini">Add Patient</a>
+			</div>
+			<div>			
+				<label for="clinicRemovePatient">Clinic Name:</label>
+				<input type="text" name="clinicRemovePatient" id="clinicRemovePatient" value=""/>
+				<label for="patientNum">Patient Number:</label>
+				<input type="text" name="patientNum" id="patientNum" value=""/>
+				<a href="#" onClick="removePatient()" id="removePatient" class="ui-btn ui-btn-inline ui-mini">Remove Patient</a>
+			</div>
+		</div>
+		<div id="display">
+		</div>
+		<script>
+			function removePatient() {
+				var clinicName = document.getElementById('clinicRemovePatient').value
+				var patientNum = document.getElementById('patientNum').value
+				var config = apiClient.Config('http://127.0.0.1:8080')
+				apiClient.getClinics(config, function(data) {
+					console.log(data)
+					var found = false
+					var clinic = ""
+					for (var clinicData in data.result){
+						clinic = data.result[clinicData]
+						if (clinic.Name == clinicName) {
+							found = true
+						}
+					}						
+					if (found) {
+						var patients = data.result[clinic].queuedPatients
+						if (patients.length != 0) {
+							for (patient in patients) {
+								if (patient.PatientNumber == patientNum) {
+									apiClient.removePatient(config, data.result[clinic].uuid, patientNum, function(updatedData) {
+										var div = document.getElementById('display')
+										// Handle the response
+										div.innerHTML = updatedData
+									})
+								} else {
+									var div = document.getElementById('display')
+									div.innerHTML = "That patient is not at that clinic."
+								}
+							}
+						} else {
+							var div = document.getElementById('display')
+							div.innerHTML = "No patients are at that clinic."
+						}
+					} else {
+						var div = document.getElementById('display')
+						div.innerHTML = "No clinic was found by that name."
+					}
+				})
+			}
+		</script>		
+	</body>
+</html>
