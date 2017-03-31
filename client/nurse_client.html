@@ -1,0 +1,111 @@
+<!DOCTYPE html> 
+<html>
+<head>
+  <title>Clinic Wait Times</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="jquery.mobile-1.4.5.min.css" />
+  <script src="jquery-1.11.1.min.js"></script>
+  <script src="jquery.mobile-1.4.5.min.js"></script>
+  <script src="client.js"></script>
+</head>
+
+<body>
+	<div data-role="page" id="Clinics">
+    <div data-role="header"><h1>Clinics</h1></div>
+    <div role="main" class="ui-content">
+      <ul data-role="listview" data-filter="true" id="clinics_list">
+      </ul>    
+    </div>
+    <div data-role="footer"></div>
+  </div>
+  
+  <div data-role="page" id="Patients">
+    <div data-role="header">
+      <a href="#Clinics" class="ui-btn ui-icon-arrow-l ui-btn-inline ui-btn-icon-left">Back</a>
+      <h1><a href="#Clinics">Clinics</a> &gt; <span class="clinicName"></span></h1>
+    </div>
+    <div role="main" class="ui-content">
+      <ul data-role="listview" data-filter="true" id="patients_list">
+      </ul> 
+    </div>
+    <div data-role="footer"></div>
+  </div>
+  
+  <style>
+    div#WaitTime ul {
+      list-style: none;
+    }
+  </style>
+  
+  <script>
+    var config = apiClient.Config("http://127.0.0.1:8080")
+    $(document).ready(function() {
+      apiClient.getClinics(config, populateClinics)
+    })  
+    
+    function populateClinics(data) {
+      console.log(data)
+      if (data.error) {
+        return
+      }
+      var list = $('div#Clinics ul#clinics_list')
+      list.empty()
+      console.log(data.result)
+      for (var id in data.result) {
+        if (!data.result.hasOwnProperty(id)) {
+          continue;
+        }
+        var clinic = data.result[id]        
+        var li = document.createElement('li')
+        var a = document.createElement('a')
+        $(a).append(document.createTextNode(clinic.Name))
+        $(a).click(function(c) {
+          return function() { 
+            loadPatients(c)
+          }
+        }(clinic))
+        
+        $(li).append(a)
+        $(list).append(li)
+      }
+      
+      $("body").pagecontainer("change", "#Clinics")
+      list.listview().listview("refresh")
+    }
+    
+    function removePatient(clinic, patient) {
+      console.log("delete patient ")
+      console.log(patient)
+    }
+    
+    function loadPatients(clinic) {
+        apiClient.getPatients(config, clinic.uuid, function(data) {
+          showPatients(clinic, data.result)
+        })
+    }
+    
+    function showPatients(clinic, patients) {
+    console.log(patients)
+      var list = $('div#Patients ul#patients_list')
+      list.empty()
+      for (var id in patients) {
+        var patient = patients[id] 
+        var li = document.createElement('li')
+        var a = document.createElement('a')
+        $(a).append(document.createTextNode(patient.PatientNumber))
+        $(a).click(function(c, p) {
+          return function() { 
+            removePatient(c, p)
+          }
+        }(clinic, patient))
+        
+        $(li).append(a)
+        $(list).append(li)
+      }
+      
+      $("body").pagecontainer("change", "#Patients")
+      list.listview().listview("refresh")
+    }
+  </script>
+</body>
+</html>
