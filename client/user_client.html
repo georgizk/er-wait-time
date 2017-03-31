@@ -25,9 +25,22 @@
       <h1><a href="#Clinics">Clinics</a> &gt; <span class="clinicName"></span></h1>
     </div>
     <div role="main" class="ui-content">
+      <ul>
+        <li><strong>Clinic:</strong> <span class="clinicName">0</span></li>
+        <li><strong>Address:</strong> <span id="clinicAddress">0</span></li>
+        <li><strong>Patients in Queue:</strong> <span id="patientsInQueue">0</span></li>
+        <li><strong>Estimated Wait Time:</strong> <span id="waitTime">15</span> minutes</li>
+        <li><strong>Trend:</strong> <span id="waitTrend">Increasing</span></li>
+      </ul>
     </div>
     <div data-role="footer"></div>
   </div>
+  
+  <style>
+    div#WaitTime ul {
+      list-style: none;
+    }
+  </style>
   
   <script>
     var config = apiClient.Config("http://127.0.0.1:8080")
@@ -45,12 +58,13 @@
         var clinic = data.result[id]        
         var li = document.createElement('li')
         var a = document.createElement('a')
-        $(a).append(document.createTextNode(clinic.Name))
-        $(a).click(function(c) {
+        var wt = getWaitTime(clinic)
+        $(a).append(document.createTextNode(clinic.Name + " (" + wt + " min)"))
+        $(a).click(function(c, cId) {
           return function() { 
-            loadClinic(c)
+            loadClinic(c, cId)
           }
-        }(clinic))
+        }(clinic, id))
         
         $(li).append(a)
         $(list).append(li)
@@ -60,8 +74,34 @@
       list.listview().listview("refresh")
     }
     
-    function loadClinic(clinic) {
-      console.log(clinic)
+    function loadClinic(clinic, clinicId) {
+      apiClient.getWaitTime(config, clinicId, showWaitTime)
+    }
+    
+    function getWaitTime(clinic) {
+      var inQueue = clinic.queuedPatients.length
+      var serviceRate = clinic.avgDepTime
+      var waitTimeOne = inQueue * serviceRate;
+      var waitTimeTwo = clinic.avgWaitTime;
+      var waitTime = Math.max(waitTimeOne, waitTimeTwo)
+      waitTime = Math.round((Math.round(waitTime / 60) / 15)) + 15
+      
+      return waitTime;
+    }
+    
+    function showWaitTime(data) {
+      var clinic = data.clinic
+      var trend = (clinic.avgDepTime <= clinic.avgArrTime) ? "Decreasing" : "Increasing";
+      waitTime = getWaitTime(clinic)
+      var inQueue = clinic.queuedPatients.length
+      
+      var title = $('span.clinicName')
+      $(title).text(clinic.Name)
+      $('span#clinicAddress').text(clinic.Address)
+      $('span#patientsInQueue').text(inQueue)
+      $('span#waitTime').text(waitTime)
+      $('span#waitTrend').text(trend)
+      $("body").pagecontainer("change", "#WaitTime")
     }
   </script>
 </body>

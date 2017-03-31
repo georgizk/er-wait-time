@@ -3,7 +3,6 @@ package handler
 import (
 	"er-wait-time/rsc"
 	"errors"
-	"math"
 	"net/http"
 	"sync"
 )
@@ -18,10 +17,9 @@ type ClinicsResponse struct {
 
 type WaitTimeResponse struct {
 	ApiResponse
-	Clinic        rsc.Clinic `json:"clinic"`
-	NumInQueue    int        `json:"numQueued"`
-	WaitTimeLower float64    `json:"waitTimeLower"`
-	WaitTimeUpper float64    `json:"waitTimeUpper"`
+	Clinic       rsc.Clinic `json:"clinic"`
+	NumInQueue   int        `json:"numQueued"`
+	MeanWaitTime float64    `json:"meanWaitTime"`
 }
 
 func NewClinicsResponse(a ApiResponse, r []rsc.Clinic) ClinicsResponse {
@@ -30,20 +28,20 @@ func NewClinicsResponse(a ApiResponse, r []rsc.Clinic) ClinicsResponse {
 
 func NewWaitTimeResponse(a ApiResponse, r rsc.Clinic) WaitTimeResponse {
 	mean := r.CalculateAvgWaitTime()
-	if mean == 0 {
-		mean = 1
-	}
-	invMean := 1 / mean
-	numSampled := r.NumProcessedPatients
-	rootOfSamples := math.Sqrt(float64(numSampled))
+	//	if mean == 0 {
+	//		mean = 1
+	//	}
+	//	invMean := 1 / mean
+	//	numSampled := r.NumProcessedPatients
+	//	rootOfSamples := math.Sqrt(float64(numSampled))
+	//
+	//	if rootOfSamples == 0 {
+	//		rootOfSamples = 1
+	//	}
 
-	if rootOfSamples == 0 {
-		rootOfSamples = 1
-	}
-
-	lower := invMean * (1 - 1.96/rootOfSamples)
-	upper := invMean * (1 + 1.96/rootOfSamples)
-	return WaitTimeResponse{ApiResponse: a, Clinic: r, WaitTimeLower: 1 / upper, WaitTimeUpper: 1 / lower, NumInQueue: len(r.QueuedPatients)}
+	//	lower := invMean * (1 - 1.96/rootOfSamples)
+	//	upper := invMean * (1 + 1.96/rootOfSamples)
+	return WaitTimeResponse{ApiResponse: a, Clinic: r, MeanWaitTime: mean, NumInQueue: len(r.QueuedPatients)}
 }
 
 func GetClinic(clinicId int) (error, rsc.Clinic) {

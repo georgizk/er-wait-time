@@ -8,7 +8,7 @@ import (
 type Clinic struct {
 	Address                      string
 	Name                         string
-	QueuedPatients               []Patient `json:"-"`
+	QueuedPatients               []Patient `json:"queuedPatients"`
 	NextPatientNumber            uint64    `json:"-"`
 	NumProcessedPatients         uint64    `json:"-"`
 	AverageWaitTime              float64   `json:"avgWaitTime"`
