@@ -28,7 +28,7 @@
       <ul data-role="listview" data-filter="true" id="patients_list">
       </ul> 
     </div>
-    <div data-role="footer"></div>
+    <div data-role="footer" id="patients_footer"></div>
   </div>
   
   <style>
@@ -78,6 +78,13 @@
       console.log(patient)
     }
     
+    function addPatient(clinic) {
+      console.log('add patient')
+      apiClient.addPatient(config, clinic.uuid, '', function(data) {
+        loadPatients(clinic)
+      })
+    }
+    
     function loadPatients(clinic) {
         apiClient.getPatients(config, clinic.uuid, function(data) {
           showPatients(clinic, data.result)
@@ -85,7 +92,8 @@
     }
     
     function showPatients(clinic, patients) {
-    console.log(patients)
+      console.log('show patients')
+      console.log(patients)
       var list = $('div#Patients ul#patients_list')
       list.empty()
       for (var id in patients) {
@@ -105,6 +113,15 @@
       
       $("body").pagecontainer("change", "#Patients")
       list.listview().listview("refresh")
+      
+      
+      var addbtn = $('<a class="ui-btn ui-btn-inline">AddPatient</a>')
+      $(addbtn).click(function() {
+      console.log('click')
+        addPatient(clinic)
+      })
+      
+      $('div#patients_footer').html('').append(addbtn)
     }
   </script>
 </body>
