@@ -1,11 +1,13 @@
 package rsc
 
 import (
+	"github.com/satori/go.uuid"
 	"log"
 	"time"
 )
 
 type Clinic struct {
+	UUID                         string `json:"uuid"`
 	Address                      string
 	Name                         string
 	QueuedPatients               []Patient `json:"queuedPatients"`
@@ -21,7 +23,7 @@ type Clinic struct {
 }
 
 func NewClinic(name string, address string) Clinic {
-	clinic := Clinic{Name: name,
+	clinic := Clinic{UUID: uuid.NewV4().String(), Name: name,
 		Address: address}
 	clinic.ResetQueue()
 	return clinic

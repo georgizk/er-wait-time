@@ -27,11 +27,19 @@ func NewHttpHandler() http.Handler {
 	router.HandleFunc("/clinics", handler.GetClinics()).Methods("GET")
 	router.HandleFunc("/clinics", handler.AddClinic()).Methods("POST")
 
-	router.HandleFunc("/clinics/{clinicId:[0-9]+}/wait_time", handler.GetEstimedWaitTime()).Methods("GET")
-
-	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients", handler.GetPatients()).Methods("GET")
-	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients", handler.AddPatient()).Methods("POST")
-	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients/{patientNumber:[0-9]+}", handler.RemovePatient()).Methods("DELETE")
+	// clinic id is like 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+	// clinic id is like 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+	clinicRoot := "/clinics/{clinicId:[0-9a-z-]+}/"
+	router.HandleFunc(clinicRoot+"wait_time", handler.GetEstimedWaitTime()).Methods("GET")
+	router.HandleFunc(clinicRoot+"patients", handler.GetPatients()).Methods("GET")
+	router.HandleFunc(clinicRoot+"patients", handler.AddPatient()).Methods("POST")
+	router.HandleFunc(clinicRoot+"patients/{patientNumber:[0-9]+}", handler.RemovePatient()).Methods("DELETE")
+	//
+	//	router.HandleFunc("/clinics/{clinicId:[0-9]+}/wait_time", handler.GetEstimedWaitTime()).Methods("GET")
+	//
+	//	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients", handler.GetPatients()).Methods("GET")
+	//	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients", handler.AddPatient()).Methods("POST")
+	//	router.HandleFunc("/clinics/{clinicId:[0-9]+}/patients/{patientNumber:[0-9]+}", handler.RemovePatient()).Methods("DELETE")
 
 	return router
 }

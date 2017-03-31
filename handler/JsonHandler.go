@@ -52,6 +52,11 @@ func EncodeHelper(w http.ResponseWriter, s ApiResponseIf) {
 	encoder.Encode(s)
 }
 
+func GetStringParam(r *http.Request, paramName string) string {
+	vars := mux.Vars(r)
+	return vars[paramName]
+}
+
 func GetIntParam(r *http.Request, paramName string) int {
 	vars := mux.Vars(r)
 	var param int

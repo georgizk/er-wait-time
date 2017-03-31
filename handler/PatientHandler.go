@@ -18,7 +18,7 @@ func GetPatients() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicMutex.Lock()
 		defer clinicMutex.Unlock()
-		clinicId := GetIntParam(r, "clinicId")
+		clinicId := GetStringParam(r, "clinicId")
 		err, clinic := GetClinic(clinicId)
 		if err != nil {
 			str := err.Error()
@@ -35,7 +35,7 @@ func AddPatient() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicMutex.Lock()
 		defer clinicMutex.Unlock()
-		clinicId := GetIntParam(r, "clinicId")
+		clinicId := GetStringParam(r, "clinicId")
 		err, clinic := GetClinic(clinicId)
 		if err != nil {
 			str := err.Error()
@@ -53,7 +53,7 @@ func RemovePatient() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicMutex.Lock()
 		defer clinicMutex.Unlock()
-		clinicId := GetIntParam(r, "clinicId")
+		clinicId := GetStringParam(r, "clinicId")
 		err, clinic := GetClinic(clinicId)
 		if err != nil {
 			str := err.Error()

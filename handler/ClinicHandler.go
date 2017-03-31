@@ -7,12 +7,12 @@ import (
 	"sync"
 )
 
-var allClinics []rsc.Clinic = []rsc.Clinic{}
+var allClinics map[string]rsc.Clinic = make(map[string]rsc.Clinic)
 var clinicMutex sync.Mutex
 
 type ClinicsResponse struct {
 	ApiResponse
-	Result []rsc.Clinic `json:"result"`
+	Result map[string]rsc.Clinic `json:"result"`
 }
 
 type WaitTimeResponse struct {
@@ -22,7 +22,7 @@ type WaitTimeResponse struct {
 	MeanWaitTime float64    `json:"meanWaitTime"`
 }
 
-func NewClinicsResponse(a ApiResponse, r []rsc.Clinic) ClinicsResponse {
+func NewClinicsResponse(a ApiResponse, r map[string]rsc.Clinic) ClinicsResponse {
 	return ClinicsResponse{ApiResponse: a, Result: r}
 }
 
@@ -44,21 +44,17 @@ func NewWaitTimeResponse(a ApiResponse, r rsc.Clinic) WaitTimeResponse {
 	return WaitTimeResponse{ApiResponse: a, Clinic: r, MeanWaitTime: mean, NumInQueue: len(r.QueuedPatients)}
 }
 
-func GetClinic(clinicId int) (error, rsc.Clinic) {
-	if clinicId < len(allClinics) && clinicId >= 0 {
-		return nil, allClinics[clinicId]
+func GetClinic(clinicId string) (error, rsc.Clinic) {
+	clinic, ok := allClinics[clinicId]
+	if ok {
+		return nil, clinic
 	}
-
 	return errors.New("Index out of bounds"), rsc.Clinic{}
 }
 
-func SaveClinic(clinicId int, clinic rsc.Clinic) error {
-	if clinicId < len(allClinics) && clinicId >= 0 {
-		allClinics[clinicId] = clinic
-		return nil
-	}
-
-	return errors.New("Index out of bounds")
+func SaveClinic(clinicId string, clinic rsc.Clinic) error {
+	allClinics[clinicId] = clinic
+	return nil
 }
 
 func GetClinics() http.HandlerFunc {
@@ -73,7 +69,7 @@ func GetEstimedWaitTime() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicMutex.Lock()
 		defer clinicMutex.Unlock()
-		clinicId := GetIntParam(r, "clinicId")
+		clinicId := GetStringParam(r, "clinicId")
 		err, clinic := GetClinic(clinicId)
 		if err != nil {
 			str := err.Error()
@@ -103,8 +99,7 @@ func AddClinic() http.HandlerFunc {
 			clinics := NewClinicsResponse(errRsp, allClinics)
 			EncodeHelper(w, clinics)
 		} else {
-
-			allClinics = append(allClinics, clinic)
+			allClinics[clinic.UUID] = clinic
 			returnClinics(w, r)
 		}
 	}
