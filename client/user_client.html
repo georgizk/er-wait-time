@@ -25,12 +25,13 @@
       <h1><a href="#Clinics">Clinics</a> &gt; <span class="clinicName"></span></h1>
     </div>
     <div role="main" class="ui-content">
-      <ul>
+      <ul id="wait_time_stuff">
         <li><strong>Clinic:</strong> <span class="clinicName">0</span></li>
         <li><strong>Address:</strong> <span id="clinicAddress">0</span></li>
         <li><strong>Patients in Queue:</strong> <span id="patientsInQueue">0</span></li>
         <li><strong>Estimated Wait Time:</strong> <span id="waitTime">15</span> minutes</li>
         <li><strong>Trend:</strong> <span id="waitTrend">Increasing</span></li>
+        <li id="refresh_button"><a class="ui-btn ui-btn-inline">Refresh</a></li>
       </ul>
     </div>
     <div data-role="footer"></div>
@@ -65,11 +66,11 @@
         var a = document.createElement('a')
         var wt = getWaitTime(clinic)
         $(a).append(document.createTextNode(clinic.Name + " (" + wt + " min)"))
-        $(a).click(function(c, cId) {
+        $(a).click(function(c) {
           return function() { 
-            loadClinic(c, cId)
+            loadClinic(c)
           }
-        }(clinic, id))
+        }(clinic))
         
         $(li).append(a)
         $(list).append(li)
@@ -79,8 +80,8 @@
       list.listview().listview("refresh")
     }
     
-    function loadClinic(clinic, clinicId) {
-      apiClient.getWaitTime(config, clinicId, showWaitTime)
+    function loadClinic(clinic) {
+      apiClient.getWaitTime(config, clinic.uuid, showWaitTime)
     }
     
     function getWaitTime(clinic) {
@@ -89,7 +90,7 @@
       var waitTimeOne = inQueue * serviceRate;
       var waitTimeTwo = clinic.avgWaitTime;
       var waitTime = Math.max(waitTimeOne, waitTimeTwo)
-      waitTime = Math.round((Math.round(waitTime / 60) / 15)) + 15
+      waitTime = Math.round((Math.round(waitTime / 60) / 15))*15 + 15
       
       return waitTime;
     }
@@ -107,6 +108,13 @@
       $('span#waitTime').text(waitTime)
       $('span#waitTrend').text(trend)
       $("body").pagecontainer("change", "#WaitTime")
+      
+      var refresh = $('<a class="ui-btn ui-btn-inline">Refresh</a>');
+      $(refresh).click(function() {
+        console.log('click')
+        loadClinic(data.clinic)
+      })
+      $('#refresh_button').html('').append(refresh)
     }
   </script>
 </body>
