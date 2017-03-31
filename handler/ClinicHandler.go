@@ -19,13 +19,9 @@ type ClinicsResponse struct {
 type WaitTimeResponse struct {
 	ApiResponse
 	Clinic        rsc.Clinic `json:"clinic"`
-	Mean          float64    `json:"mean"`
-	NumSamples    uint64     `json:"numSamples"`
 	NumInQueue    int        `json:"numQueued"`
 	WaitTimeLower float64    `json:"waitTimeLower"`
 	WaitTimeUpper float64    `json:"waitTimeUpper"`
-	LowerInterval float64    `json:"lower"`
-	UpperInterval float64    `json:"upper"`
 }
 
 func NewClinicsResponse(a ApiResponse, r []rsc.Clinic) ClinicsResponse {
@@ -47,8 +43,7 @@ func NewWaitTimeResponse(a ApiResponse, r rsc.Clinic) WaitTimeResponse {
 
 	lower := invMean * (1 - 1.96/rootOfSamples)
 	upper := invMean * (1 + 1.96/rootOfSamples)
-	return WaitTimeResponse{ApiResponse: a, Clinic: r, WaitTimeLower: 1 / upper, WaitTimeUpper: 1 / lower, NumSamples: r.NumProcessedPatients, NumInQueue: len(r.QueuedPatients),
-		LowerInterval: lower, UpperInterval: upper, Mean: mean}
+	return WaitTimeResponse{ApiResponse: a, Clinic: r, WaitTimeLower: 1 / upper, WaitTimeUpper: 1 / lower, NumInQueue: len(r.QueuedPatients)}
 }
 
 func GetClinic(clinicId int) (error, rsc.Clinic) {
@@ -102,7 +97,7 @@ func AddClinic() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicMutex.Lock()
 		defer clinicMutex.Unlock()
-		clinic := rsc.Clinic{NextPatientNumber: 1, QueuedPatients: []rsc.Patient{}, NumProcessedPatients: 0, AverageWaitTime: 0}
+		clinic := rsc.NewClinic("", "")
 		err := DecodeHelper(r, &clinic)
 		if err != nil {
 			str := err.Error()
