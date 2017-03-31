@@ -20,7 +20,7 @@ type WaitTimeResponse struct {
 	ApiResponse
 	Clinic        rsc.Clinic `json:"clinic"`
 	Mean          float64    `json:"mean"`
-	NumSamples    int        `json:"numSamples"`
+	NumSamples    uint64     `json:"numSamples"`
 	NumInQueue    int        `json:"numQueued"`
 	WaitTimeLower float64    `json:"waitTimeLower"`
 	WaitTimeUpper float64    `json:"waitTimeUpper"`
@@ -38,7 +38,7 @@ func NewWaitTimeResponse(a ApiResponse, r rsc.Clinic) WaitTimeResponse {
 		mean = 1
 	}
 	invMean := 1 / mean
-	numSampled := len(r.VisitTimes)
+	numSampled := r.NumProcessedPatients
 	rootOfSamples := math.Sqrt(float64(numSampled))
 
 	if rootOfSamples == 0 {
@@ -47,7 +47,7 @@ func NewWaitTimeResponse(a ApiResponse, r rsc.Clinic) WaitTimeResponse {
 
 	lower := invMean * (1 - 1.96/rootOfSamples)
 	upper := invMean * (1 + 1.96/rootOfSamples)
-	return WaitTimeResponse{ApiResponse: a, Clinic: r, WaitTimeLower: 1 / upper, WaitTimeUpper: 1 / lower, NumSamples: len(r.VisitTimes), NumInQueue: len(r.QueuedPatients),
+	return WaitTimeResponse{ApiResponse: a, Clinic: r, WaitTimeLower: 1 / upper, WaitTimeUpper: 1 / lower, NumSamples: r.NumProcessedPatients, NumInQueue: len(r.QueuedPatients),
 		LowerInterval: lower, UpperInterval: upper, Mean: mean}
 }
 
@@ -102,7 +102,7 @@ func AddClinic() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clinicMutex.Lock()
 		defer clinicMutex.Unlock()
-		clinic := rsc.Clinic{NextPatientNumber: 1, QueuedPatients: []rsc.Patient{}, VisitTimes: []rsc.VisitTime{}}
+		clinic := rsc.Clinic{NextPatientNumber: 1, QueuedPatients: []rsc.Patient{}, NumProcessedPatients: 0, AverageWaitTime: 0}
 		err := DecodeHelper(r, &clinic)
 		if err != nil {
 			str := err.Error()

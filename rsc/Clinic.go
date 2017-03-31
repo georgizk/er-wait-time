@@ -6,15 +6,12 @@ import (
 )
 
 type Clinic struct {
-	Address           string
-	Name              string
-	QueuedPatients    []Patient   `json:"-"`
-	NextPatientNumber uint64      `json:"-"`
-	VisitTimes        []VisitTime `json:"-"`
-}
-
-type VisitTime struct {
-	TimeSeconds float64
+	Address              string
+	Name                 string
+	QueuedPatients       []Patient `json:"-"`
+	NextPatientNumber    uint64    `json:"-"`
+	NumProcessedPatients uint64    `json:"-"`
+	AverageWaitTime      float64   `json:"-"`
 }
 
 func (clinic *Clinic) AddPatient(priority int) Patient {
@@ -34,18 +31,7 @@ func (clinic *Clinic) ResetQueue() {
 }
 
 func (clinic *Clinic) CalculateAvgWaitTime() float64 {
-	visitTimes := clinic.VisitTimes
-	if visitTimes == nil || len(visitTimes) == 0 {
-		return 0
-	}
-
-	var averageVisitTime float64
-	for _, visitTime := range visitTimes {
-		averageVisitTime += visitTime.TimeSeconds
-	}
-	averageVisitTime /= float64(len(visitTimes))
-
-	return averageVisitTime
+	return clinic.AverageWaitTime
 }
 
 func (clinic *Clinic) RemovePatient(patientNumber uint64) {
@@ -61,8 +47,10 @@ func (clinic *Clinic) RemovePatient(patientNumber uint64) {
 				s[len(s)-1], s[i] = s[i], s[len(s)-1]
 			}
 			clinic.QueuedPatients = s[:len(s)-1]
-			visitTime := VisitTime{time.Since(patient.CheckInTime).Seconds()}
-			clinic.VisitTimes = append(clinic.VisitTimes, visitTime)
+			clinic.NumProcessedPatients += 1
+			visitTime := time.Since(patient.CheckInTime).Seconds()
+			prevAvg := clinic.AverageWaitTime
+			clinic.AverageWaitTime = prevAvg + (visitTime-prevAvg)/float64(clinic.NumProcessedPatients)
 			// need to return after this, otherwise the patient will get "removed" twice
 			return
 
