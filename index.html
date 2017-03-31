@@ -28,7 +28,6 @@
 				var patientNum = document.getElementById('patientNum').value
 				var config = apiClient.Config('http://127.0.0.1:8080')
 				apiClient.getClinics(config, function(data) {
-					console.log(data)
 					var found = false
 					var clinic = ""
 					for (var clinicData in data.result){
@@ -38,15 +37,23 @@
 						}
 					}						
 					if (found) {
-						var patients = data.result[clinic].queuedPatients
+						var patients = clinic.queuedPatients
 						if (patients.length != 0) {
-							for (patient in patients) {
-								if (patient.PatientNumber == patientNum) {
-									apiClient.removePatient(config, data.result[clinic].uuid, patientNum, function(updatedData) {
+							for (var patient in patients) {
+								if (patients[patient].PatientNumber == patientNum) {
+									apiClient.removePatient(config, clinic.uuid, patientNum, function(updatedData) {
 										var div = document.getElementById('display')
-										// Handle the response
-										div.innerHTML = updatedData
+										div.innerHTML = ""
+										div.innerHTML += clinicName + ": "
+										for (var dataIndex in updatedData.result) {
+											if (dataIndex != updatedData.result.length - 1) {
+												div.innerHTML += updatedData.result[dataIndex].PatientNumber + ", "
+											} else {
+												div.innerHTML += updatedData.result[dataIndex].PatientNumber
+											}
+										}
 									})
+									break;
 								} else {
 									var div = document.getElementById('display')
 									div.innerHTML = "That patient is not at that clinic."
