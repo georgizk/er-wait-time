@@ -76,6 +76,10 @@
     function removePatient(clinic, patient) {
       console.log("delete patient ")
       console.log(patient)
+      
+      apiClient.removePatient(config, clinic.uuid, patient.PatientNumber, function(data) {
+        loadPatients(clinic)
+      })
     }
     
     function addPatient(clinic) {
@@ -92,6 +96,8 @@
     }
     
     function showPatients(clinic, patients) {
+      var title = $('span.clinicName')
+      $(title).text(clinic.Name)
       console.log('show patients')
       console.log(patients)
       var list = $('div#Patients ul#patients_list')
