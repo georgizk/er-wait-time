@@ -49,12 +49,17 @@
     })  
     
     function populateClinics(data) {
-      if (data.error || !(data.result.length > 0)) {
+      console.log(data)
+      if (data.error) {
         return
       }
       var list = $('div#Clinics ul#clinics_list')
       list.empty()
+      console.log(data.result)
       for (var id in data.result) {
+        if (!data.result.hasOwnProperty(id)) {
+          continue;
+        }
         var clinic = data.result[id]        
         var li = document.createElement('li')
         var a = document.createElement('a')
