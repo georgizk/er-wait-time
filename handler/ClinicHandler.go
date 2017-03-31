@@ -3,6 +3,7 @@ package handler
 import (
 	"er-wait-time/rsc"
 	"errors"
+	"math"
 	"net/http"
 	"sync"
 )
@@ -17,16 +18,37 @@ type ClinicsResponse struct {
 
 type WaitTimeResponse struct {
 	ApiResponse
-	Clinic   rsc.Clinic `json:"clinic"`
-	WaitTime float64    `json:"waitTime"`
+	Clinic        rsc.Clinic `json:"clinic"`
+	Mean          float64    `json:"mean"`
+	NumSamples    int        `json:"numSamples"`
+	NumInQueue    int        `json:"numQueued"`
+	WaitTimeLower float64    `json:"waitTimeLower"`
+	WaitTimeUpper float64    `json:"waitTimeUpper"`
+	LowerInterval float64    `json:"lower"`
+	UpperInterval float64    `json:"upper"`
 }
 
 func NewClinicsResponse(a ApiResponse, r []rsc.Clinic) ClinicsResponse {
 	return ClinicsResponse{ApiResponse: a, Result: r}
 }
 
-func NewWaitTimeResponse(a ApiResponse, r rsc.Clinic, z float64) WaitTimeResponse {
-	return WaitTimeResponse{ApiResponse: a, Clinic: r, WaitTime: z}
+func NewWaitTimeResponse(a ApiResponse, r rsc.Clinic) WaitTimeResponse {
+	mean := r.CalculateAvgWaitTime()
+	if mean == 0 {
+		mean = 1
+	}
+	invMean := 1 / mean
+	numSampled := len(r.VisitTimes)
+	rootOfSamples := math.Sqrt(float64(numSampled))
+
+	if rootOfSamples == 0 {
+		rootOfSamples = 1
+	}
+
+	lower := invMean * (1 - 1.96/rootOfSamples)
+	upper := invMean * (1 + 1.96/rootOfSamples)
+	return WaitTimeResponse{ApiResponse: a, Clinic: r, WaitTimeLower: 1 / upper, WaitTimeUpper: 1 / lower, NumSamples: len(r.VisitTimes), NumInQueue: len(r.QueuedPatients),
+		LowerInterval: lower, UpperInterval: upper, Mean: mean}
 }
 
 func GetClinic(clinicId int) (error, rsc.Clinic) {
@@ -66,8 +88,7 @@ func GetEstimedWaitTime() http.HandlerFunc {
 			EncodeHelper(w, rsp)
 			return
 		}
-		waitTime := clinic.CalculateAvgWaitTime()
-		response := NewWaitTimeResponse(NewApiResponse(200, nil), clinic, waitTime)
+		response := NewWaitTimeResponse(NewApiResponse(200, nil), clinic)
 		EncodeHelper(w, response)
 	}
 }
